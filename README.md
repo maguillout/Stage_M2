@@ -4,3 +4,12 @@ Thanks to technological advances in microscopy and image analysis, there is a la
 Semi-supervised classification models have been developed to be integrated into a microscopy system. The aim of this study is to evaluate the robustness of these models by having them classify various cell datasets.
 
 The tests showed that the transfer learning method makes these models generalizable. They are able to adapt easily to classify cell images from various datasets (different colorations, cell origins, biological issue). 
+
+
+## Project Overview
+
+├── features_extraction
+├── pretrained_models
+│   ├── import_data.py
+│   └── retraining_functions.py
+└── README.md
