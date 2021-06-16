@@ -7,9 +7,10 @@ The tests showed that the transfer learning method makes these models generaliza
 
 
 ## Project Overview
-
+```
 ├── features_extraction
 ├── pretrained_models
 │   ├── import_data.py
 │   └── retraining_functions.py
 └── README.md
+```
