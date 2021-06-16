@@ -253,134 +253,139 @@ def usage():
     print("\t -p --per_train_data : optionnal parameter to enable cross validation")
     print("\t -m --mode : retraining mode: FT, TL, FR or FR_w")
     
-    if __name__ == "__main__":
-        # default parameters
-        batch_size = 8
-        dim = 72
-        path_results = None
-        mode = "FT"
-        cross_valid = False
-        per_train_data = 1
-        data = "Nagao"  
-        model_path = "/home/maelle/Documents/Stage_m2/Models/d_model_Trained_All_Labled_Images.h5"
+if __name__ == "__main__":
+    # default parameters
+    batch_size = 8
+    dim = 72
+    path_results = None
+    mode = "FT"
+    cross_valid = False
+    per_train_data = 0.8
+    data = "Nagao"  
+    model_path = "/home/maelle/Documents/Stage_m2/Models/d_model_Trained_All_Labled_Images.h5"
 
-        
-        try:
-            opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:c",
-                                    ["mode=","path_results=","dim=","batch_size=","data=","per=","cross_valid"])
     
-        except getopt.GetoptError as err:
-            print(err)
-            sys.exit(2)      
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:c:h",
+                                ["mode=", "path_results=", "dim=", "batch_size=",
+                                 "data=", "per=", "cross_valid","help"])
+
+    except getopt.GetoptError as err:
+        print(err)
+        sys.exit(2)      
+        
+    for option, arg in opts:        
+        
+        if option in ("-h", "--help"):
+            usage()
+            sys.exit(0)
+        if option in ("-m", "--mode"):
+            mode = arg
+        elif option in ("--dataset", "--data"):
+            data = arg
+        elif option in ("-r", "--path_results"):
+            path_results = arg
+        elif option in ("-d", "--dim"):
+            dim = int(arg)
+        elif option in ("-b", "--batch_size"):
+            batch_size = int(arg)
+        elif option in ("-p", "--per"):
+            per_train_data = int(arg)/100
+        elif option in ("-c","--cross_valid"):                
+            cross_valid = True
+        
+                
+    if data == "Nagao":
+        dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
+        for dataset in dataset_list:
+            path = "/home/maelle/Documents/Stage_m2/data/"+dataset
+            x, y = import_data.nagao(path, dim, wgan=True)
+        
+    else:
+        dataset_list = ["testing dataset"] #for cellcognition and dic there is only one dataset
+        
+    # Model importation
+    base_model=keras.models.load_model(model_path)
+    base_model.trainable = False
+    base_model.summary()   
+        
+    
+    for dataset in dataset_list:
+        if data == "Nagao":                
+            path = "/home/maelle/Documents/Stage_m2/data/"+dataset
+            x, y = import_data.nagao(path, dim, wgan=True)
+            if dataset == "NIH3T3_Cilia":
+                class_names = ["Cilia", "notCilia"]
+            else:            
+                class_names = ["G2", "notG2"]
             
-        for option, arg in opts:
-            if option in ("-m", "--mode"):
-                mode = arg
-            elif option in ("--dataset", "--data"):
-                data = arg
-            elif option in ("-r", "--path_results"):
-                path_results = arg
-            elif option in ("-d", "--dim"):
-                dim = int(arg)
-            elif option in ("-b", "--batch_size"):
-                batch_size = int(arg)
-            elif option in ("-p", "--per"):
-                per_train_data = int(arg)/100
-            elif option in ("-c","--cross_valid"):                
-                cross_valid = True
-            
-                    
-        if data == "Nagao":
-            dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
-            for dataset in dataset_list:
-                path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-                x, y = import_data.nagao(path, dim, wgan=True)
+        elif data == "CellCognition":
+            dataset = "CellCognition"
+            class_names = ['AA', 'BA','I','J']
+            x, y = import_data.cell_cognition(dim, wgan=True)
+    
+        elif data == "DIC":
+            dataset = "DIC"
+            class_names = ["AA","NEBD","Meta"]
+            x, y = import_data.dic(dim, wgan=True)
             
         else:
-            dataset_list = ["testing dataset"] #for cellcognition and dic there is only one dataset
+            print("Enter a right dataset name (Nagao, DIC or CellCognition)")
+            usage()
+            sys.exit(0)
             
-        # Model importation
-        base_model=keras.models.load_model(model_path)
-        base_model.trainable = False
-        base_model.summary()   
+        ############## Fitting and results ##############################################  
+        nb_classes = len(class_names)
+        
+        if cross_valid:
+            cross_validation(x, y, mode, dataset)
             
-        
-        for dataset in dataset_list:
-            if data == "Nagao":                
-                path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-                x, y = import_data.nagao(path, dim, wgan=True)
-                if dataset == "NIH3T3_Cilia":
-                    class_names = ["Cilia", "notCilia"]
-                else:            
-                    class_names = ["G2", "notG2"]
-                
-            elif data == "CellCognition":
-                dataset = "CellCognition"
-                class_names = ['AA', 'BA','I','J']
-                x, y = import_data.cell_cognition(dim, wgan=True)
-        
-            elif data == "DIC":
-                dataset = "DIC"
-                class_names = ["AA","NEBD","Meta"]
-                x, y = import_data.dic(dim, wgan=True)
+        else:
+            t0 = time.time() #starting timer    
+            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 1-per_train_data)
+            train_len = len(y_train)    
+
+            if mode == "FR":
+                title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
+                model = full_retraining(base_model, nb_classes)        
+                save_path = f'{path_results}/{dataset}_full_retrain'
+            
+            elif mode == "TL":       
+                title_name = f"Transfer Learning for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
+                model = transfer_learning(base_model, nb_classes)        
+                save_path = f'{path_results}/{dataset}_TL'
                 
             else:
-                print("Enter a right dataset name (Nagao, DIC or CellCognition)")
-                usage()
-                sys.exit(0)
-                
-            ############## Fitting and results ##############################################  
-            nb_classes = len(class_names)
-            
-            if cross_valid:
-                cross_validation(x, y, mode, dataset)
-                
-            else:
-                t0 = time.time() #starting timer    
-                x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 1-per_train_data)
-                train_len = len(y_train)    
-    
-                if mode == "FR":
-                    title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
-                    model = full_retraining(base_model, nb_classes)        
-                    save_path = f'{path_results}/{dataset}_full_retrain'
-                
-                elif mode == "TL":       
-                    title_name = f"Transfer Learning for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
-                    model = transfer_learning(base_model, nb_classes)        
-                    save_path = f'{path_results}/{dataset}_TL'
+                title_name = f"Fine Tuning for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
+                model = fine_tuning(base_model, nb_classes) 
+                save_path = f'{path_results}/{dataset}_FT'
+
+            if mode == "FR":
+                f = open(path_results+"/test_"+dataset+"_FR.txt","a")
+                if os.path.getsize(path_results+"/test_"+dataset+"_FR.txt") == 0:
+                    f.write("Full Retraining on dataset "+dataset+"\n")            
+                    f.write("train_len\tacc\tepo\ttime\n")   
                     
-                else:
-                    title_name = f"Fine Tuning for prediction of classes {class_names} for {dataset} with train_len size {train_len}"
-                    model = fine_tuning(base_model, nb_classes) 
-                    save_path = f'{path_results}/{dataset}_FT'
-    
-                if mode == "FR":
-                    f = open(path_results+"/test_"+dataset+"_FR.txt","a")
-                    if os.path.getsize(path_results+"/test_"+dataset+"_FR.txt") == 0:
-                        f.write("Full Retraining on dataset "+dataset+"\n")            
-                        f.write("train_len\tacc\tepo\ttime\n")   
-                        
-                elif mode == "TL":   
-                    f = open(path_results+"/test_"+dataset+"_TL.txt","a")
-                    if os.path.getsize(path_results+"/test_"+dataset+"_TL.txt") == 0:
-                        f.write("Transfer Learning on dataset "+dataset+"\n")            
-                        f.write("train_len\tacc\tepo\ttime\n")     
-                        
-                else:    
-                    f = open(path_results+"/test_"+dataset+"_FT.txt","a")   
-                    if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
-                        f.write("Fine Tuning on dataset "+dataset+"\n")
-                        f.write("train_len\tacc\tepo\ttime\n")   
-    
-                acc, epo = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
-    
-                f.write(f"{train_len}\t")
-                f.write(f"{acc}\t")
-                f.write(f"{epo}\t")
-                t1 = time.time() 
-                f.write(f"{t1-t0}\n")
-            
+            elif mode == "TL":   
+                f = open(path_results+"/test_"+dataset+"_TL.txt","a")
+                if os.path.getsize(path_results+"/test_"+dataset+"_TL.txt") == 0:
+                    f.write("Transfer Learning on dataset "+dataset+"\n")            
+                    f.write("train_len\tacc\tepo\ttime\n")     
+                    
+            else:    
+                f = open(path_results+"/test_"+dataset+"_FT.txt","a")   
+                if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
+                    f.write("Fine Tuning on dataset "+dataset+"\n")
+                    f.write("train_len\tacc\tepo\ttime\n")   
+
+            acc, epo = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
+
+            f.write(f"{train_len}\t")
+            f.write(f"{acc}\t")
+            f.write(f"{epo}\t")
+            t1 = time.time() 
+            f.write(f"{t1-t0}\n")
+        
 
             
             
