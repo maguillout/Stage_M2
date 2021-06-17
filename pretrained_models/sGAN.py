@@ -331,17 +331,11 @@ if __name__ == "__main__":
         elif option in ("-p", "--per"):
             per_train_data = int(arg)/100
         elif option in ("-c","--cross_valid"):                
-            cross_valid = True
-        
+            cross_valid = True        
                 
-    if data == "Nagao":
+    if data == "Nagao": #for nagao images, there are 4 different datasets
         dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
-        for dataset in dataset_list:
-            path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=False)
         
-    else:
-        dataset_list = ["testing dataset"] #for cellcognition and dic there is only one dataset
         
     # Model importation
     base_model=keras.models.load_model(model_path)
@@ -352,7 +346,7 @@ if __name__ == "__main__":
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wGAN=False)
+            x, y = import_data.nagao(path, dim, wgan=False)
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
             else:            
@@ -366,7 +360,7 @@ if __name__ == "__main__":
         elif data == "DIC":
             dataset = "DIC"
             class_names = ["AA","NEBD","Meta"]
-            x, y = import_data.dic(dim, wGAN=False)
+            x, y = import_data.dic(dim, wgan=False)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
