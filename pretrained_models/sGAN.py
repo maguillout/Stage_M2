@@ -29,6 +29,8 @@ from sklearn.model_selection import train_test_split
 import import_data
 import retraining
 
+import time
+
 ######################### Adjusting pretrained model #########################
 
 def fine_tuning(base_model, nb_classes):

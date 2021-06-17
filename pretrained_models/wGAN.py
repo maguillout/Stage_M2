@@ -29,6 +29,8 @@ import import_data
 import retraining
 
 
+
+import time
 ######################### Adjusting pretrained model #########################
 
 def fine_tuning(base_model, nb_classes):

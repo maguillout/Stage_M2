@@ -22,8 +22,6 @@ from keras.callbacks import EarlyStopping
 
 def check_neural_network(model):
     """
-    
-
     Parameters
     ----------
     model : TYPE
