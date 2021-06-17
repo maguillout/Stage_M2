@@ -49,18 +49,7 @@ import figures
 
 def fine_tuning(base_model, nb_classes):
     """
-    
-
-    Parameters
-    ----------
-    base_model : TYPE
-        DESCRIPTION.
-    nb_classes : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    None.
+    Adjust the model to adapt it to a new dataset with different classes
 
     """
     model = Sequential()
@@ -79,19 +68,20 @@ def fine_tuning(base_model, nb_classes):
     return(model)
 
 def transfer_learning(base_model, nb_classes):
-    """
+    """    
+    Retrain fully connected layers of a pretrained model
+    to adapt it to a new dataset
     
-
     Parameters
     ----------
-    base_model : TYPE
-        DESCRIPTION.
-    nb_classes : TYPE
-        DESCRIPTION.
+    base_model : keras model
+        The pretrained model
+    nb_classes : int
+        the new number of classes.
 
     Returns
     -------
-    None.
+    The model with trainable dense layers.
 
     """
 
@@ -123,7 +113,24 @@ def transfer_learning(base_model, nb_classes):
     return(model)
 
 
-def full_retraining(base_model, nb_classes):    
+def full_retraining(base_model, nb_classes):
+    """    
+
+    Retrain all the layers of a pretrained model
+    to adapt it to a new dataset
+    
+    Parameters
+    ----------
+    base_model : keras model
+        The pretrained model
+    nb_classes : int
+        the new number of classes.
+
+    Returns
+    -------
+    The model with trainable dense layers.
+
+    """
     model = Sequential()
 
     for layer in base_model.layers[:-2]:
@@ -140,6 +147,24 @@ def full_retraining(base_model, nb_classes):
     return(model)
 
 def full_retraining_weight(base_model, nb_classes):    
+    """    
+    TODO
+    Retrain all the layers of a pretrained model
+    with random initialized weights
+    to adapt it to a new dataset
+    
+    Parameters
+    ----------
+    base_model : keras model
+        The pretrained model
+    nb_classes : int
+        the new number of classes.
+
+    Returns
+    -------
+    The model with trainable dense layers.
+
+    """
     #correct
     model = Sequential()
 
@@ -160,6 +185,28 @@ def full_retraining_weight(base_model, nb_classes):
 ######################### Retraining the model ###############################
 
 def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes):
+    """
+    Split the dataset in k groups to vary the testing dataset at each fold
+    Draw plots
+    Store results in txt file (accuracy, number of epochs, time)
+
+    Parameters
+    ----------
+    x : images
+    y : labels
+    mode : FT, TL, FR or FR_w
+    dataset : name of the dataset
+    class_names : list of different labels
+    batch_size : size of one batch
+    path_results : directory to store plots
+    base_model : pretrained model
+    nb_classes : number of clases
+
+    Returns
+    -------
+    None.
+
+    """
     t0 = time.time() #starting timer  
     kf = 0   
     # prepare cross validation
