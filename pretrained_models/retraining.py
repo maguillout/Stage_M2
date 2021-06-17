@@ -83,14 +83,14 @@ def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, titl
     tab = pd.DataFrame({'True Label':y_test.argmax(axis=1), 'Predicted Label': preds.argmax(axis=1)})                
     tab['Confusion'] = tab['True Label'].astype(str)+tab['Predicted Label'].astype(str)   
     
-    for i in class_names:
-        for j in class_names:
+    for i in range(len(class_names)):
+        for j in range(len(class_names)):
             
             if i == j:
-                title = f"Cells in class {i} well classified"
+                title = f"Cells in class {class_names[i]} well classified"
                 
             else:
-                title = f"Cells in class {i} classified as class {j}"                
+                title = f"Cells in class {class_names[i]} classified as class {class_names[j]}"                
             
             figures.generate_mosaic(tab, f"{i}{j}", x_test, title, save_path+"_"+str(kf))
     

@@ -266,13 +266,13 @@ if __name__ == "__main__":
 
     
     try:
-        opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:c:h",
+        opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:ch",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
                                  "data=", "per=", "cross_valid","help"])
 
     except getopt.GetoptError as err:
         print(err)
-        sys.exit(2)      
+        sys.exit(2)       
         
     for option, arg in opts:        
         
@@ -338,7 +338,7 @@ if __name__ == "__main__":
         nb_classes = len(class_names)
         
         if cross_valid:
-            cross_validation(x, y, mode, dataset)
+            cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes)
             
         else:
             t0 = time.time() #starting timer    
