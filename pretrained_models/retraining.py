@@ -7,25 +7,9 @@ Created on Wed Jun 16 10:05:28 2021
 """
 
 
-
-import time
-
-import os
-
-import keras
-
 import numpy as np
 import pandas as pd
-
-
-import cv2
 import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing.image import img_to_array
-from tensorflow.keras.utils import to_categorical #from keras.utils import np_utils
-
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
-from tensorflow.keras import activations
 
 from keras.optimizers import Adam
 
@@ -33,15 +17,7 @@ import figures
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
-
-import getopt, sys
 from keras.callbacks import EarlyStopping
-
-from sklearn.model_selection import KFold, train_test_split
-
-from keras.preprocessing.image import ImageDataGenerator
-from numpy import expand_dims
-from mpl_toolkits.axes_grid1 import ImageGrid
 
 
 def check_neural_network(model):

@@ -17,32 +17,16 @@ import sys
 # Neural networks
 import keras
 import numpy as np
-import matplotlib.pyplot as plt
-import cv2
 
-# Optimizers
-from keras.optimizers import Adam
-
-
-from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers, activations
-
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import classification_report
-
-from keras.callbacks import EarlyStopping
 from sklearn.model_selection import KFold
-
-import pandas as pd
-import time
 
 from sklearn.model_selection import train_test_split
 
 # Import functions from other files
 import import_data
 import retraining
-import figures
 
 
 ######################### Adjusting pretrained model #########################
