@@ -7,9 +7,18 @@ The tests showed that the transfer learning method makes these models generaliza
 
 ## Project Overview
 ```
-├── features_extraction
+├── conda_envs
+│   └── keras.yml
 ├── pretrained_models
+│   ├── classif_dic.sh
+│   ├── feature_extrac.py
+│   ├── feature_extrac_wGAN.py
+│   ├── figures.py
 │   ├── import_data.py
-│   └── retraining_functions.py
+│   ├── README.md
+│   ├── retraining.py
+│   ├── sGAN.py
+│   └── wGAN.py
 └── README.md
+
 ```
