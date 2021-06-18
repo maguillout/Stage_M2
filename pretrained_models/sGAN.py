@@ -162,11 +162,11 @@ def full_retraining_weight(base_model, nb_classes):
 
 ######################### Retraining the model ###############################
 
-def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes):
+def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes, img_names):
     """
     Split the dataset in k groups to vary the testing dataset at each fold
     Draw plots
-    Store results in txt file (accuracy, number of epochs, time)
+    Store results in txt file (accuracy, number of epochs, time, images names)
 
     Parameters
     ----------
@@ -203,12 +203,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         x_test = x[test_index]
         y_test = y[test_index]
         
-        print("cross validation")
-        print(dataset)
-        print(f'Shape of training image : {x_train.shape}')
-        print(f'Shape of testing image : {x_test.shape}')
-        print(f'Shape of training labels : {y_train.shape}')
-        print(f'Shape of testing labels : {y_test.shape}')   
+        filenames = np.array(img_names)[test_index]
         
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
@@ -224,29 +219,45 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
             title_name = f"Fine Tuning for prediction of classes {class_names} for {dataset}  with sGAN - kfold {kf}"
             model = fine_tuning(base_model, nb_classes) 
             save_path = f'{path_results}/{dataset}_FT'
+            
+        print(title_name)    
         
-        acc, epo = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset)
+        acc, epo, tab = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset)
         
         acc_kf.append(acc)
         epo_kf.append(epo)
+        
+        tab["names"] = filenames
+        tab["kfold"] = kf        
         
         kf+=1
         
     
     if mode == "FR":
         f = open(path_results+"/test_"+dataset+"_FR.txt","a")
+        tab.to_csv(path_results+"/test_"+dataset+"_FR_table.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FR.txt") == 0:
             f.write("Full Retraining on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
+
+    elif mode == "FR_w":
+        f = open(path_results+"/test_"+dataset+"_FR_w.txt","a")
+        tab.to_csv(path_results+"/test_"+dataset+"_FR_w_table.csv",sep=';')
+        if os.path.getsize(path_results+"/test_"+dataset+"_FR_w.txt") == 0:
+            f.write("Full Retraining with random weights on dataset "+dataset+"\n")            
+            f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
+
             
     elif mode == "TL":   
         f = open(path_results+"/test_"+dataset+"_TL.txt","a")
+        tab.to_csv(path_results+"/test_"+dataset+"_TL_table.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_TL.txt") == 0:
             f.write("Transfer Learning on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
             
     else:    
         f = open(path_results+"/test_"+dataset+"_FT.txt","a")   
+        tab.to_csv(path_results+"/test_"+dataset+"_FT_table.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
             f.write("Fine Tuning on dataset "+dataset+"\n")
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
@@ -255,8 +266,8 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     for i in range(5): #print accuracy and number of epochs for each fold
         f.write(f"{acc_kf[i]}\t")
         f.write(f"{epo_kf[i]}\t")  
-    f.write(f"{round(np.mean(acc_kf),2)}(\u00B1{round(np.std(acc_kf),2)})")
-    f.write(f"{np.mean(epo_kf)}\t")
+    f.write(f"{round(np.mean(acc_kf),2)}(\u00B1{round(np.std(acc_kf),2)})\t")
+    f.write(f"{round(np.mean(epo_kf),2)}(\u00B1{round(np.std(epo_kf),2)})\t")
 
     t1 = time.time() 
     f.write(f"{t1-t0}\n")
@@ -288,7 +299,6 @@ if __name__ == "__main__":
     per_train_data = 0.8
     data = "Nagao"  
     model_path = "/home/maelle/Documents/Stage_m2/Models/c_model_5400.h5"
-
     
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:ch",
@@ -344,12 +354,12 @@ if __name__ == "__main__":
         elif data == "CellCognition":
             dataset = "CellCognition"
             class_names = ['AA', 'BA','I','J']
-            x, y = import_data.cell_cognition(dim, wgan=False)
+            x, y, img_names  = import_data.cell_cognition(dim, wgan=False)
     
         elif data == "DIC":
             dataset = "DIC"
             class_names = ["AA","NEBD","Meta"]
-            x, y = import_data.dic(dim, wgan=False)
+            x, y, img_names  = import_data.dic(dim, wgan=False)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
@@ -360,7 +370,7 @@ if __name__ == "__main__":
         nb_classes = len(class_names)
         
         if cross_valid:
-            cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes)
+            cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes, img_names)
             
         else:
             t0 = time.time() #starting timer    
@@ -400,7 +410,7 @@ if __name__ == "__main__":
                     f.write("Fine Tuning on dataset "+dataset+"\n")
                     f.write("train_len\tacc\tepo\ttime\n")   
 
-            acc, epo = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
+            acc, epo, _ = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
 
             f.write(f"{train_len}\t")
             f.write(f"{acc}\t")

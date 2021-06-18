@@ -34,7 +34,8 @@ def check_neural_network(model):
     """
     print(model.summary())
     for layer in model.layers:
-        print(layer.name," ", layer.trainable)  
+        print(layer.name," ", layer.trainable)        
+        
         
         
 def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset):    
@@ -53,9 +54,10 @@ def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, titl
     figures.plot_loss(H, save_path+f"_loss_classes_{batch_size}_{kf}.png", title="Loss curve")
     
     preds = model.predict(x_test)    
+    
 
     tab = pd.DataFrame({'True Label':y_test.argmax(axis=1), 'Predicted Label': preds.argmax(axis=1)})                
-    tab['Confusion'] = tab['True Label'].astype(str)+tab['Predicted Label'].astype(str)   
+    tab['Confusion'] = tab['True Label'].astype(str)+tab['Predicted Label'].astype(str)     
     
     for i in range(len(class_names)):
         for j in range(len(class_names)):
@@ -80,4 +82,4 @@ def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, titl
     plt.savefig(f'{save_path}_confusion_matrix_{dataset}_{batch_size}_kf_{kf}.png')
     plt.clf()     
     
-    return(acc,epo)
+    return(acc,epo, tab)

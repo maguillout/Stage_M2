@@ -144,7 +144,7 @@ def create_dataset_cell_cognition(class_dir, label, wgan, dim):
         images.append(img_array)
         labels.append(label)
         
-    return(images, labels)
+    return(images, labels, img_names)
 
 
 def nagao(path, dim, wgan):
@@ -207,7 +207,8 @@ def dic(dim, wgan):
     images = []
     labels = []
     lab = 0
-    path = "/home/maelle/Documents/Stage_m2/data/DIC_cropped_augmnted/"
+    path = "/home/maelle/Documents/Stage_m2/data/DIC_cropped_augmnted/"    
+    filenames = []
     for class_dir in ["AA/","NEBD/","Meta/"]:
         img_names = os.listdir(path+class_dir)
         datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
@@ -217,6 +218,7 @@ def dic(dim, wgan):
             samples = np.expand_dims(img_read, 0)            
             it = datagen.flow(samples, batch_size=1)
             for i in range(4): #rotation by 45°
+                filenames.append(img)
                 batch = it.next()
                 image = batch[0].astype('uint8')
                 img_array=img_to_array(image)
@@ -229,4 +231,4 @@ def dic(dim, wgan):
         lab += 1
                 
     labels = to_categorical(labels, 3)
-    return(np.array(images), np.array(labels))
+    return(np.array(images), np.array(labels), filenames)

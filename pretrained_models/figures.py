@@ -133,8 +133,30 @@ def plot_confusion_matrix(y_true, y_pred, classes,
     return ax
 
 
-def generate_mosaic(tab, value, x_test, title, save_path):  
+def generate_mosaic(tab, value, x_test, title, save_path):
+    """
+    Generate mosaic of ight/wrong classified images for each class
+
+    Parameters
+    ----------
+    tab : TYPE
+        DESCRIPTION.
+    value : TYPE
+        DESCRIPTION.
+    x_test : TYPE
+        DESCRIPTION.
+    title : TYPE
+        DESCRIPTION.
+    save_path : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
     idx = tab.index[tab['Confusion']==value].tolist()  
+    
     print(f"{len(idx)} {title}")
     if len(idx) != 0: 
         if len(idx) > 40:
