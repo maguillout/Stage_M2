@@ -43,7 +43,7 @@ def fine_tuning(base_model, nb_classes):
     for layer in base_model.layers[:-2]:
         model.add(layer)
     
-    layer = layers.Dense(2, name="dense_2")
+    layer = layers.Dense(nb_classes, name="dense_2")
     layer.trainable = True
     model.add(layer)
     
@@ -321,6 +321,9 @@ if __name__ == "__main__":
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
         dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
+    
+    else:        
+        dataset_list =  ["only one dataset"] 
         
         
     # Model importation

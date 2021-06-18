@@ -143,6 +143,7 @@ def create_dataset_cell_cognition(class_dir, label, wgan, dim):
             img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
         images.append(img_array)
         labels.append(label)
+        
     return(images, labels)
 
 
@@ -206,11 +207,12 @@ def dic(dim, wgan):
     images = []
     labels = []
     lab = 0
-    for class_dir in ["/AA/","/NEBD/","/Meta/"]:
-        img_names = os.listdir(class_dir)
+    path = "/home/maelle/Documents/Stage_m2/data/DIC_cropped_augmnted/"
+    for class_dir in ["AA/","NEBD/","Meta/"]:
+        img_names = os.listdir(path+class_dir)
         datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
         for img in img_names:
-            img_read = cv2.resize(cv2.imread(class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
+            img_read = cv2.resize(cv2.imread(path+class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
             img_read = rgb2gray(img_read, dim) 
             samples = np.expand_dims(img_read, 0)            
             it = datagen.flow(samples, batch_size=1)
@@ -226,4 +228,5 @@ def dic(dim, wgan):
                 labels.append(lab) 
         lab += 1
                 
-    return(images, labels)
+    labels = to_categorical(labels, 3)
+    return(np.array(images), np.array(labels))
