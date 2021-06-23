@@ -167,7 +167,11 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         x_test = x[test_index]
         y_test = y[test_index]
         
-        filenames = np.array(img_names)[test_index]
+        if img_names:        
+            filenames = np.array(img_names)[test_index]
+        
+        else: 
+            filenames = None
         
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
