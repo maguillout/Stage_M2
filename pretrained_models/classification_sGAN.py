@@ -190,6 +190,9 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
             
         print(title_name)    
         
+        if random_weights:
+            retraining.shuffle_weights(model)      
+        
         acc, epo, tab = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset)
         
         acc_kf.append(acc)
