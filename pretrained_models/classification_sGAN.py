@@ -202,29 +202,21 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     
     if mode == "FR":
         f = open(path_results+"/test_"+dataset+"_FR.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_FR_table_kf_{kf}.csv",sep=';')
+        tab.to_csv(f"{path_results}/test_{dataset}_FR_table_kf_{kf}.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FR.txt") == 0:
             f.write("Full Retraining on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
-
-    elif mode == "FR_w":
-        f = open(path_results+"/test_"+dataset+"_FR_w.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_FR_w_table.csv",sep=';')
-        if os.path.getsize(path_results+"/test_"+dataset+"_FR_w.txt") == 0:
-            f.write("Full Retraining with random weights on dataset "+dataset+"\n")            
-            f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
-
             
     elif mode == "TL":   
         f = open(path_results+"/test_"+dataset+"_TL.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_TL_table.csv",sep=';')
+        tab.to_csv(f"{path_results}/test_{dataset}_TL_table_kf_{kf}.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_TL.txt") == 0:
             f.write("Transfer Learning on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
             
     else:    
         f = open(path_results+"/test_"+dataset+"_FT.txt","a")   
-        tab.to_csv(path_results+"/test_"+dataset+"_FT_table.csv",sep=';')
+        tab.to_csv(f"{path_results}/test_{dataset}_FT_table_kf_{kf}.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
             f.write("Fine Tuning on dataset "+dataset+"\n")
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
