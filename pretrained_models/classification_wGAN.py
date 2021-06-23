@@ -18,7 +18,6 @@ import sys
 import keras
 import numpy as np
 
-
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers, activations
 from sklearn.model_selection import KFold
@@ -29,8 +28,9 @@ from sklearn.model_selection import train_test_split
 import import_data
 import retraining
 
-import time
 
+
+import time
 ######################### Adjusting pretrained model #########################
 
 def fine_tuning(base_model, nb_classes):
@@ -43,7 +43,7 @@ def fine_tuning(base_model, nb_classes):
     for layer in base_model.layers[:-2]:
         model.add(layer)
     
-    layer = layers.Dense(nb_classes, name="dense_2")
+    layer = layers.Dense(nb_classes)
     layer.trainable = True
     model.add(layer)
     
@@ -74,13 +74,21 @@ def transfer_learning(base_model, nb_classes):
     # Creation of a new model based on the imported model
     model = Sequential()
 
-    for layer in base_model.layers[:-2]:
+    for layer in base_model.layers[:-1]:
         model.add(layer)
 
-    layer = layers.Dense(nb_classes, name="dense_2")
+    layer = layers.Dense(units=800, activation='relu')
     layer.trainable = True
     model.add(layer)
 
+    layer = layers.Dense(units=400, activation='relu')
+    layer.trainable = True
+    model.add(layer)
+
+    layer = layers.Dense(nb_classes)
+    layer.trainable = True
+    model.add(layer)
+    
     layer = layers.Activation(activations.softmax, name="activation_5")
     layer.trainable = True
     model.add(layer)
@@ -109,41 +117,6 @@ def full_retraining(base_model, nb_classes):
     The model with trainable dense layers.
 
     """
-    model = Sequential()
-
-    for layer in base_model.layers[:-2]:
-        model.add(layer)
-
-    layer = layers.Dense(nb_classes, name="dense_2")
-    model.add(layer)
-
-    layer = layers.Activation(activations.softmax, name="activation_5")
-    model.add(layer)    
-    
-    model.trainable = True
-    
-    return(model)
-
-def full_retraining_weight(base_model, nb_classes):    
-    """    
-    TODO
-    Retrain all the layers of a pretrained model
-    with random initialized weights
-    to adapt it to a new dataset
-    
-    Parameters
-    ----------
-    base_model : keras model
-        The pretrained model
-    nb_classes : int
-        the new number of classes.
-
-    Returns
-    -------
-    The model with trainable dense layers.
-
-    """
-    #correct
     model = Sequential()
 
     for layer in base_model.layers[:-2]:
@@ -235,29 +208,21 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     
     if mode == "FR":
         f = open(path_results+"/test_"+dataset+"_FR.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_FR_table.csv",sep=';')
+        tab.to_csv(path_results+"/test_"+dataset+"_FR_table_kf_{kf}.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FR.txt") == 0:
             f.write("Full Retraining on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
-
-    elif mode == "FR_w":
-        f = open(path_results+"/test_"+dataset+"_FR_w.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_FR_w_table.csv",sep=';')
-        if os.path.getsize(path_results+"/test_"+dataset+"_FR_w.txt") == 0:
-            f.write("Full Retraining with random weights on dataset "+dataset+"\n")            
-            f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
-
             
     elif mode == "TL":   
         f = open(path_results+"/test_"+dataset+"_TL.txt","a")
-        tab.to_csv(path_results+"/test_"+dataset+"_TL_table.csv",sep=';')
+        tab.to_csv(path_results+"/test_"+dataset+"_TL_table_kf_{kf}.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_TL.txt") == 0:
             f.write("Transfer Learning on dataset "+dataset+"\n")            
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
             
     else:    
         f = open(path_results+"/test_"+dataset+"_FT.txt","a")   
-        tab.to_csv(path_results+"/test_"+dataset+"_FT_table.csv",sep=';')
+        tab.to_csv(path_results+"/test_"+dataset+"_FT_table_kf_{kf}s.csv",sep=';')
         if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
             f.write("Fine Tuning on dataset "+dataset+"\n")
             f.write("batch_size\tacc_0\tepo_0\tacc_1\tepo_1\tacc_2\tepo_2\tacc_3\tepo_3\tacc_4\tepo_4\tacc_mean\tepo_mean\ttime\n")   
@@ -271,7 +236,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
 
     t1 = time.time() 
     f.write(f"{t1-t0}\n")
-    f.close()      
+    f.close() 
 
 
 ############################ Usage ###########################################
@@ -279,7 +244,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
 def usage():
     """Print usage of the program."""
     print(f"\nUSAGE\npython {sys.argv[0]}")
-    print("Use a pretrained sGAN  model on a new dataset")
+    print("Use a pretrained wGAN  model on a new dataset")
     print("\nOPTIONS")
     print("\t --data : dataset: Nagao or DIC or CellCognition")
     print("\t -r --path_results : path directory where plots are registred")    
@@ -287,7 +252,9 @@ def usage():
     print("\t -b --batch_size : size of each batch")
     print("\t -c --cross_valid : optionnal parameter to enable cross validation")
     print("\t -p --per_train_data : optionnal parameter to enable cross validation")
-    print("\t -m --mode : retraining mode: FT, TL, FR or FR_w")
+    print("\t -m --mode : retraining mode: FT, TL, FR")
+    print("\t -w --random_weights : initialize the model with random weights")
+          
     
 if __name__ == "__main__":
     # default parameters
@@ -298,12 +265,14 @@ if __name__ == "__main__":
     cross_valid = False
     per_train_data = 0.8
     data = "Nagao"  
-    model_path = "/home/maelle/Documents/Stage_m2/Models/c_model_5400.h5"
+    model_path = "/home/maelle/Documents/Stage_m2/Models/d_model_Trained_All_Labled_Images.h5"
+    random_weights = False
+
     
     try:
-        opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:ch",
+        opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
-                                 "data=", "per=", "cross_valid","help"])
+                                 "data=", "per=", "cross_valid","help","random_weights"])
 
     except getopt.GetoptError as err:
         print(err)
@@ -327,14 +296,17 @@ if __name__ == "__main__":
         elif option in ("-p", "--per"):
             per_train_data = int(arg)/100
         elif option in ("-c","--cross_valid"):                
-            cross_valid = True        
+            cross_valid = True
+        elif option in ("-w", "--random_weights"):
+            random_weights = True
+        
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
         dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
     
     else:        
         dataset_list =  ["only one dataset"] 
-        
+
         
     # Model importation
     base_model=keras.models.load_model(model_path)
@@ -345,7 +317,7 @@ if __name__ == "__main__":
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=False)
+            x, y = import_data.nagao(path, dim, wgan=True)
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
             else:            
@@ -354,12 +326,12 @@ if __name__ == "__main__":
         elif data == "CellCognition":
             dataset = "CellCognition"
             class_names = ['AA', 'BA','I','J']
-            x, y, img_names  = import_data.cell_cognition(dim, wgan=False)
+            x, y, img_names  = import_data.cell_cognition(dim, wgan=True)
     
         elif data == "DIC":
             dataset = "DIC"
             class_names = ["AA","NEBD","Meta"]
-            x, y, img_names  = import_data.dic(dim, wgan=False)
+            x, y, img_names  = import_data.dic(dim, wgan=True)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
@@ -409,6 +381,9 @@ if __name__ == "__main__":
                 if os.path.getsize(path_results+"/test_"+dataset+"_FT.txt") == 0:
                     f.write("Fine Tuning on dataset "+dataset+"\n")
                     f.write("train_len\tacc\tepo\ttime\n")   
+                    
+            if random_weights:
+                retraining.shuffle_weights(model)                
 
             acc, epo, _ = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
 

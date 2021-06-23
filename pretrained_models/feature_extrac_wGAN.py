@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 
 
 import import_data
-import wGAN
+import classification_wGAN
 import retraining
 
 # data = "Nagao"
@@ -33,15 +33,6 @@ batch_size = 8
 mode = "FT"
 per_train_data = 0.8
 
-
-outputs = []
-conv_layers = []
-for layer in (base_model.layers):
-    if "conv" in layer.name:
-        conv_layers.append(layer.name)
-        outputs.append(layer.output)
-    
-model = Model(inputs=base_model.inputs, outputs=outputs)
 
 
 if data == "Nagao": #for nagao images, there are 4 different datasets
@@ -86,36 +77,79 @@ for dataset in dataset_list:
     # Retraining the model:
     if mode == "FR":
         title_name = f"Features extraction of wGAN model after full retraining"
-        model = wGAN.full_retraining(base_model, nb_classes)        
+        model = classification_wGAN.full_retraining(base_model, nb_classes)        
         save_path = f'{path_results}/{dataset}_full_retrain'
         
     elif mode == "TL":       
         title_name = f"Features extraction of wGAN model after transfer learning"
-        model = wGAN.transfer_learning(base_model, nb_classes)        
+        model = classification_wGAN.transfer_learning(base_model, nb_classes)        
         save_path = f'{path_results}/{dataset}_TL'
         
     else:
         title_name = f"Features extraction of wGAN model after fine tuning"
-        model = wGAN.fine_tuning(base_model, nb_classes) 
+        model = classification_wGAN.fine_tuning(base_model, nb_classes) 
         save_path = f'{path_results}/{dataset}_FT'   
+    
     
     
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 1-per_train_data)
     acc, epo, _ = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
     
-    for img, label in selected_images, selected_labels:       
-        feature_maps = model.predict(img)    
+    model.save("/home/maelle/Documents/Stage_m2/Models/wGAN_ft_dic.h5")
+    
+    model_2 = model
+    model.trainable = False
+    
+    outputs = []
+    conv_layers = []
+    for layer in (base_model.layers):
+        if "conv" in layer.name:
+            conv_layers.append(layer.name)
+            outputs.append(layer.output)
+    
+    model = Model(inputs=base_model.inputs, outputs=outputs)
+    
+    for i in range(len(selected_images)):       
+        img = selected_images[i]     
+        img = np.expand_dims(img, axis=0)
+        
+        label = (selected_labels[i]).argmax(axis=0)
+        
+        feature_maps = model.predict(img)  
+        
         
         square = 8
         j = 0
         for fmap in feature_maps:
-            for ix in range(3):
+            ix = 1
+            for _ in range(square):
+                for _ in range(square):                   
+                    ax = plt.subplot(square, square, ix)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    plt.title(f"{title_name} for one image of class {label}")
+                    plt.imshow(fmap[0, :, :, ix-1], cmap='gray')
+                    ix +=1 
+            plt.show()
+            j+=1
+
+    
+    square = 8
+    j = 0
+    for fmap in feature_maps:
+        ix = 1
+        for _ in range(square):
+            for _ in range(square):
                 ax = plt.subplot(square, square, ix)
                 ax.set_xticks([])
                 ax.set_yticks([])
                 plt.imshow(fmap[0, :, :, ix-1], cmap='gray')
                 ix +=1 
-        plt.title(f"{title_name} for one image of class {label}")
-        plt.savefig()   
+        plt.title(f"Features map of one image of class {label} with layer {conv_layers[j]}")
+        plt.savefig("/home/maelle/Documents/Stage_m2/Results/features_extrac/sGAN/img_1"+classe+"_"+conv_layers[j]+".png")   
+        plt.show()
+        j+=1
+            
+        plt.savefig("/home/maelle/Documents/Stage_m2/Results/features_extrac/sGAN/img_1"+classe+"_"+conv_layers[j]+".png")   
         plt.show()
         j+=1
