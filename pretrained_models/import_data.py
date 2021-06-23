@@ -90,12 +90,14 @@ def cell_cognition(dim, wgan):
     class_names = ['AA', 'BA','I','J']
     nb_classes = len(class_names)
 
+    
+
     for i in range(nb_classes):
         g = class_names[i]
-        train_dir = path + "train/"+g+"/"
-        test_dir = path + "test/"+g+"/"
-        data_tr, labels_tr = create_dataset_cell_cognition(train_dir, i, wgan, dim)
-        data_ts, labels_ts = create_dataset_cell_cognition(test_dir, i, wgan, dim)
+        train_dir = path + "/train/"+g+"/"
+        test_dir = path + "/test/"+g+"/"
+        data_tr, labels_tr, tr_names = create_dataset_cell_cognition(train_dir, i, wgan, dim)
+        data_ts, labels_ts, ts_names = create_dataset_cell_cognition(test_dir, i, wgan, dim)        
         
     x_train = np.array(data_tr)    
     y_train = np.array(labels_tr)    
@@ -106,8 +108,10 @@ def cell_cognition(dim, wgan):
     y = np.concatenate((y_train, y_test))  
     
     y = to_categorical(y, nb_classes) 
+
+    img_names = tr_names.append(ts_names)
         
-    return(x, y)
+    return(x, y, img_names)
 
 
 def create_dataset_cell_cognition(class_dir, label, wgan, dim):

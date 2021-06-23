@@ -14,6 +14,8 @@ import os
 import getopt
 import sys
 
+import time
+
 # Neural networks
 import keras
 import numpy as np
@@ -30,7 +32,6 @@ import retraining
 
 
 
-import time
 ######################### Adjusting pretrained model #########################
 
 def fine_tuning(base_model, nb_classes):
