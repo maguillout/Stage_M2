@@ -36,4 +36,4 @@ By default, the model is fine tuned before retraining, but it is also possible t
 - batch size (default is 8): `-b 16` or `--batch_size 16`
 - cross validation (defaut is false): `-c` or `--cross_valid`
 - proportion data which be used for training (defaut is 0.8): `-p 0.6` or `--per 0.6`
-- initialize the model with random weights: `-w` or `--random_weights`
+- initialize the model with random weights (defaut is false): `-w` or `--random_weights`
