@@ -156,16 +156,13 @@ def nagao(path, dim, wgan):
 
     Parameters
     ----------
-    path : TYPE
-        DESCRIPTION.
-    label : TYPE
-        DESCRIPTION.
-    wgan : TYPE
-        DESCRIPTION.
-    dim : TYPE
-        DESCRIPTION.
-    nb_classes : TYPE
-        DESCRIPTION.
+    path : str
+        dataset directory
+    dim : int
+        dimension of one image
+    wgan : bool
+        False if data must be in [-1,1]
+        True if data must be in [0,1]
 
     Returns
     -------
@@ -194,15 +191,11 @@ def dic(dim, wgan):
 
     Parameters
     ----------
-    class_dir : TYPE
-        DESCRIPTION.
-    label : TYPE
-        DESCRIPTION.
-    wgan : TYPE
-        DESCRIPTION.
-    dim : TYPE
-        DESCRIPTION.
-
+    dim : int
+        dimension of one image
+    wgan : bool
+        False if data must be in [-1,1]
+        True if data must be in [0,1]
     Returns
     -------
     None.
