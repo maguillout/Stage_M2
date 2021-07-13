@@ -41,7 +41,7 @@ def rgb2gray(rgb, dim, chan=None):
     gray_reshaped = np.reshape(gray, (dim, dim, 1))
     return gray_reshaped
 
-def resize(dataset, dim, wgan):
+def resize(dataset, dim, wgan, chan=None):
     """    
 
     Parameters
@@ -63,7 +63,7 @@ def resize(dataset, dim, wgan):
     
     for img in dataset:
         img_resized = cv2.resize((img),(dim,dim))
-        img_resized = rgb2gray(img_resized, dim)
+        img_resized = rgb2gray(img_resized, dim, chan)
         if wgan:
             dataset_resized.append(img_resized/255.0) #normalization [0,1]
 
@@ -151,7 +151,7 @@ def create_dataset_cell_cognition(class_dir, label, wgan, dim):
     return(images, labels, img_names)
 
 
-def nagao(path, dim, wgan):
+def nagao(path, dim, wgan, chan=None):
     """    
 
     Parameters
@@ -179,7 +179,7 @@ def nagao(path, dim, wgan):
     x = np.concatenate((x_train, x_test))
     y = np.concatenate((y_train, y_test))  
     
-    x = resize(x, dim, wgan)
+    x = resize(x, dim, wgan, chan)
     y = to_categorical(y, nb_classes) 
         
     return(x, y) 

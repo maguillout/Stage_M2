@@ -262,6 +262,7 @@ def usage():
     print("\t -p --per_train_data : optionnal parameter to enable cross validation")
     print("\t -m --mode : retraining mode: FT, TL, FR")
     print("\t -w --random_weights : initialize the model with random weights")
+    print("\t --chan: selected color red -> 0 green -> 1 blue -> 2, by default, the thre channels are merged ")
           
     
 if __name__ == "__main__":
@@ -275,12 +276,13 @@ if __name__ == "__main__":
     data = "Nagao"  
     model_path = "/home/maelle/Documents/Stage_m2/Models/d_model_Trained_All_Labled_Images.h5"
     random_weights = False
+    chan = None
 
     
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
-                                 "data=", "per=", "cross_valid","help","random_weights"])
+                                 "data=", "per=", "cross_valid","help","random_weights","chan"])
 
     except getopt.GetoptError as err:
         print(err)
@@ -307,14 +309,17 @@ if __name__ == "__main__":
             cross_valid = True
         elif option in ("-w", "--random_weights"):
             random_weights = True
+        elif option in ("--chan"):
+            chan = arg
         
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
-        dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
+        # dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
+        dataset_list =  ["HeLa_Hoechst-EB1"] 
     
     else:        
-        dataset_list =  ["only one dataset"] 
-
+        dataset_list = [data] 
+        
         
     # Model importation
     base_model=keras.models.load_model(model_path)
@@ -325,7 +330,7 @@ if __name__ == "__main__":
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=True)
+            x, y = import_data.nagao(path, dim, wgan=True, chan)
             img_names = None
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
@@ -333,12 +338,10 @@ if __name__ == "__main__":
                 class_names = ["G2", "notG2"]
             
         elif data == "CellCognition":
-            dataset = "CellCognition"
             class_names = ['AA', 'BA','I','J']
             x, y, img_names  = import_data.cell_cognition(dim, wgan=True)
     
         elif data == "DIC":
-            dataset = "DIC"
             class_names = ["AA","NEBD","Meta"]
             x, y, img_names  = import_data.dic(dim, wgan=True)
             
