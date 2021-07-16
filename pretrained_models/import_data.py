@@ -12,7 +12,6 @@ import cv2
 from keras.preprocessing.image import ImageDataGenerator, img_to_array
 from tensorflow.keras.utils import to_categorical
 
-
 def rgb2gray(rgb, dim, chan=None):
     """    
     Convert an colored image (3 channels) to a grayscale image
@@ -40,6 +39,7 @@ def rgb2gray(rgb, dim, chan=None):
         gray = np.dot(rgb[...,:3], chan)
     gray_reshaped = np.reshape(gray, (dim, dim, 1))
     return gray_reshaped
+
 
 def resize(dataset, dim, wgan, chan=None):
     """    
@@ -89,6 +89,42 @@ def cell_cognition(dim, wgan):
     path = "/home/maelle/Documents/Stage_m2/data/dataset"
     class_names = ['AA', 'BA','I','J']
     nb_classes = len(class_names)
+    
+    def create_dataset_cell_cognition(class_dir, label, wgan, dim):
+        """
+        
+    
+        Parameters
+        ----------
+        class_dir : str
+            directory of the class folder
+        label : int
+            numeric label for this class
+        dim : int
+            dimension of one image
+        wgan : bool
+            False if data must be in [-1,1]
+            True if data must be in [0,1]
+    
+        Returns
+        -------
+        images and labels
+    
+        """
+        images = []
+        labels = []
+        img_names = os.listdir(class_dir)
+        for img in img_names:
+            img_read=cv2.resize(cv2.imread(class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
+            img_array=img_to_array(img_read)
+            if wgan:               
+                img_array=img_array/255.0 #for Wasserstein GAN, values must be in [0,1]  
+            else:
+                img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
+            images.append(img_array)
+            labels.append(label)
+            
+        return(images, labels, img_names)
 
     
 
@@ -113,42 +149,6 @@ def cell_cognition(dim, wgan):
         
     return(x, y, img_names)
 
-
-def create_dataset_cell_cognition(class_dir, label, wgan, dim):
-    """
-    
-
-    Parameters
-    ----------
-    class_dir : str
-        directory of the class folder
-    label : int
-        numeric label for this class
-    dim : int
-        dimension of one image
-    wgan : bool
-        False if data must be in [-1,1]
-        True if data must be in [0,1]
-
-    Returns
-    -------
-    images and labels
-
-    """
-    images = []
-    labels = []
-    img_names = os.listdir(class_dir)
-    for img in img_names:
-        img_read=cv2.resize(cv2.imread(class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
-        img_array=img_to_array(img_read)
-        if wgan:               
-            img_array=img_array/255.0 #for Wasserstein GAN, values must be in [0,1]  
-        else:
-            img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
-        images.append(img_array)
-        labels.append(label)
-        
-    return(images, labels, img_names)
 
 
 def nagao(path, dim, wgan, chan=None):
@@ -227,5 +227,43 @@ def dic(dim, wgan):
                 labels.append(lab) 
         lab += 1
                 
-    labels = to_categorical(labels, 3)
+    labels = to_categorical(labels, 3)    
     return(np.array(images), np.array(labels), filenames)
+
+def import_mito(dim, wgan):
+    """
+    
+
+    Parameters
+    ----------
+    dim : int
+        dimension of one image
+    wgan : bool
+        False if data must be in [-1,1]
+        True if data must be in [0,1]
+    Returns
+    -------
+    None.
+
+    """    
+    class_names = ["control", "treated"]
+    path = "/home/maelle/Documents/Stage_m2/data/data_mito/"   
+    images = []
+    labels = []    
+    lab = 0
+    for class_dir in class_names:
+        img_names = os.listdir(path+class_dir)
+        for name in img_names: 
+            img_array = cv2.imread(path+class_dir+"/"+name,cv2.IMREAD_COLOR)
+            img_resized = cv2.resize((img_array),(dim,dim))
+            gray = np.dot(img_resized[...,:3], [0.299, 0.587, 0.144])
+            gray_reshaped = np.reshape(gray, (dim, dim, 1))
+            if wgan:               
+                img_array=gray_reshaped/255.0 #for Wasserstein GAN, values must be in [0,1]  
+            else:
+                img_array=(gray_reshaped-127.5)/127.5 #for classic GAN, must be in [-1,1]                
+            images.append(img_array)
+            labels.append(lab) 
+        lab += 1     
+        
+    return(images, labels)

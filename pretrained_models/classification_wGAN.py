@@ -330,7 +330,7 @@ if __name__ == "__main__":
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=True, chan)
+            x, y = import_data.nagao(path, dim, wgan=True)
             img_names = None
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
