@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -197,11 +198,16 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         print(f"Train: {x_train.shape}")
         print(f"Test: {x_test.shape}")
         
-        if img_names:
-            filenames = np.array(img_names)[test_index]            
+        # Normalization:  for classic GAN, values must be in [-1,1]
+        x_train=(x_train-127.5)/127.5
+        x_test=(x_test-127.5)/127.5
         
-        else: 
-            filenames = None
+        
+        # if img_names:
+        #     filenames = np.array(img_names)[test_index]            
+        
+        # else: 
+        #     filenames = None
             
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
@@ -228,7 +234,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         acc_kf.append(acc)
         epo_kf.append(epo)
         
-        tab["names"] = filenames
+        # tab["names"] = filenames
         tab["kfold"] = kf        
         
         kf+=1

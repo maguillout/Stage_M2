@@ -245,30 +245,25 @@ def import_mito(dim):
         
     return(images, labels, filenames)
 
-def data_augmentation(x, y, filenames):    
+def data_augmentation(x, y):    
     images = []
     labels = []    
-    filenames2 = []
     
     datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
     nb_images = len(x)
     for i in range(nb_images):
         lab = y[i]
         img = x[i]
-        if len(filenames)>0:
-            file = filenames[i]
         samples = expand_dims(img, 0)
         it = datagen.flow(samples, batch_size=1)     
-        for i in range(4):
+        for i in range(8):
             batch = it.next()
             image = batch[0].astype('uint8')
             img_array=img_to_array(image)
             images.append(img_array)
             labels.append(lab)      
-            if len(filenames)>0:
-                    filenames2.append(file)  
     
-    return(np.array(images), np.array(labels), filenames)
+    return(np.array(images), np.array(labels))
 
 
 

@@ -176,18 +176,18 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         y_test = y_array[test_index]           
         
         
-        if img_names:        
-            filenames = np.array(img_names)[test_index]
+        # if img_names:        
+        #     filenames = np.array(img_names)[test_index]
         
-        else: 
-            filenames = None
+        # else: 
+        #     filenames = None
         
         print("Before data augmentation:")
         print(f"Train: {x_train.shape}")
         print(f"Test: {x_test.shape}")      
         
-        x_train, y_train, filenames = import_data.data_augmentation(x_train, y_train, filenames=[])
-        x_test, y_test, filenames = import_data.data_augmentation(x_test, y_test, filenames)   
+        x_train, y_train = import_data.data_augmentation(x_train, y_train)
+        x_test, y_test = import_data.data_augmentation(x_test, y_test)   
         
         print("After data augmentation:")
         print(f"Train: {x_train.shape}")
@@ -224,7 +224,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         acc_kf.append(acc)
         epo_kf.append(epo)
         
-        tab["names"] = filenames
+        # tab["names"] = filenames
         
         kf+=1
         
