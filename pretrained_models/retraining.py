@@ -21,17 +21,6 @@ from keras.callbacks import EarlyStopping
 
 
 def check_neural_network(model):
-    """
-    Parameters
-    ----------
-    model : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    None.
-
-    """
     print(model.summary())
     for layer in model.layers:
         print(layer.name," ", layer.trainable)        

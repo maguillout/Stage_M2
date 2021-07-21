@@ -22,7 +22,7 @@ import numpy as np
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers, activations
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 
 from sklearn.model_selection import train_test_split
 
@@ -31,6 +31,8 @@ import import_data
 import retraining
 
 
+
+from tensorflow.keras.utils import to_categorical
 
 ######################### Adjusting pretrained model #########################
 
@@ -159,10 +161,15 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     None.
 
     """
+    x_array = np.array(x)  # x and y must be lists for kfold splitting but must be arrays for training
+    y_array = to_categorical(y, nb_classes)    
+    
+    
     t0 = time.time() #starting timer  
     kf = 0   
     # prepare cross validation
-    kfold = KFold(n_splits=5, shuffle=True, random_state=1)
+    kfold = StratifiedKFold(n_splits=5) 
+    kfold.get_n_splits(x,y)   
     
     #################### Cross Validation #######################################   
     # The dataset is split in k groups (k=5), each group will be used as a testing dataset.
@@ -170,15 +177,28 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     acc_kf = [] 
     epo_kf = []
     
-    for train_index, test_index in kfold.split(x):
-        x_train = x[train_index]
-        y_train = y[train_index]
+    for train_index, test_index in kfold.split(x, y):
+        x_train = x_array[train_index]
+        y_train = y_array[train_index]
         
-        x_test = x[test_index]
-        y_test = y[test_index]
+        x_test = x_array[test_index]
+        y_test = y_array[test_index]            
         
-        if img_names:        
-            filenames = np.array(img_names)[test_index]
+        print("Before data augmentation:")
+        print(f"Train: {x_train.shape}")
+        print(f"Test: {x_test.shape}")              
+        
+        
+        
+        x_train, y_train = import_data.data_augmentation(x_train, y_train)
+        x_test, y_test = import_data.data_augmentation(x_test, y_test)
+        
+        print("After data augmentation:")
+        print(f"Train: {x_train.shape}")
+        print(f"Test: {x_test.shape}")
+        
+        if img_names:
+            filenames = np.array(img_names)[test_index]            
         
         else: 
             filenames = None

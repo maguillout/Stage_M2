@@ -21,7 +21,7 @@ import numpy as np
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers, activations
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 
 from sklearn.model_selection import train_test_split
 
@@ -30,6 +30,9 @@ import import_data
 import retraining
 
 import time
+
+from tensorflow.keras.utils import to_categorical
+
 
 ######################### Adjusting pretrained model #########################
 
@@ -149,10 +152,15 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     None.
 
     """
+    x_array = np.array(x)  # x and y must be lists for kfold splitting but must be arrays for training
+    y_array = to_categorical(y, nb_classes)    
+    
+    
     t0 = time.time() #starting timer  
     kf = 0   
     # prepare cross validation
-    kfold = KFold(n_splits=5, shuffle=True, random_state=1)
+    kfold = StratifiedKFold(n_splits=5) 
+    kfold.get_n_splits(x,y)   
     
     #################### Cross Validation #######################################   
     # The dataset is split in k groups (k=5), each group will be used as a testing dataset.
@@ -160,18 +168,36 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     acc_kf = [] 
     epo_kf = []
     
-    for train_index, test_index in kfold.split(x):
-        x_train = x[train_index]
-        y_train = y[train_index]
+    for train_index, test_index in kfold.split(x, y):
+        x_train = x_array[train_index]
+        y_train = y_array[train_index]
         
-        x_test = x[test_index]
-        y_test = y[test_index]
+        x_test = x_array[test_index]
+        y_test = y_array[test_index]           
+        
         
         if img_names:        
             filenames = np.array(img_names)[test_index]
         
         else: 
             filenames = None
+        
+        print("Before data augmentation:")
+        print(f"Train: {x_train.shape}")
+        print(f"Test: {x_test.shape}")      
+        
+        x_train, y_train, filenames = import_data.data_augmentation(x_train, y_train, filenames=[])
+        x_test, y_test, filenames = import_data.data_augmentation(x_test, y_test, filenames)   
+        
+        print("After data augmentation:")
+        print(f"Train: {x_train.shape}")
+        print(f"Test: {x_test.shape}")
+        
+        # Normalization:  for classic GAN, values must be in [-1,1]
+        x_train=(x_train-127.5)/127.5
+        x_test=(x_test-127.5)/127.5
+        
+
         
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
@@ -266,6 +292,11 @@ if __name__ == "__main__":
     random_weights = False
     chan = None
     
+    # Model importation
+    base_model=keras.models.load_model(model_path)
+    base_model.trainable = False
+    base_model.summary()   
+    
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
@@ -304,19 +335,12 @@ if __name__ == "__main__":
         dataset_list =  ["HeLa_Hoechst-EB1"] 
     
     else:        
-        dataset_list = [data] 
-        
-        
-    # Model importation
-    base_model=keras.models.load_model(model_path)
-    base_model.trainable = False
-    base_model.summary()   
-        
+        dataset_list = [data]         
     
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=False)
+            x, y = import_data.nagao(path, dim)
             img_names = None
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
@@ -325,11 +349,11 @@ if __name__ == "__main__":
             
         elif data == "CellCognition":
             class_names = ['AA', 'BA','I','J']
-            x, y, img_names  = import_data.cell_cognition(dim, wgan=False)
+            x, y, img_names  = import_data.cell_cognition(dim)
     
         elif data == "DIC":
             class_names = ["AA","NEBD","Meta"]
-            x, y, img_names  = import_data.dic(dim, wgan=False)
+            x, y, img_names  = import_data.dic(dim)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")

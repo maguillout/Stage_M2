@@ -45,10 +45,35 @@ dim = 72
 
 path = "/home/maelle/Documents/Stage_m2/data/data_mito/"    
 
-
-
-
-
+# def data_augmentation(x, y):    
+#     images = []
+#     labels = []
+    
+#     datagen = ImageDataGenerator(
+# 	rotation_range=30,
+# 	zoom_range=0.15,
+# 	width_shift_range=0.2,
+# 	height_shift_range=0.2,
+# 	shear_range=0.15,
+# 	horizontal_flip=True,
+# 	fill_mode="nearest")
+#     nb_images = len(x)
+#     for i in range(nb_images):
+#         lab = y[i]
+#         img = x[i]
+#         samples = expand_dims(img, 0)
+#         it = datagen.flow(samples, batch_size=1)     
+#         images.append(img)
+#         labels.append(lab) 
+#         for j in range(16):
+#             batch = it.next()
+#             image = batch[0].astype('uint8')
+#             img_array=img_to_array(image)
+#             plt.imshow(img_array, cmap='gray')
+#             images.append(img_array)
+#             labels.append(lab)    
+            
+#     return(np.array(images), np.array(labels))
 
 
 def data_augmentation(x, y):    
@@ -64,7 +89,7 @@ def data_augmentation(x, y):
         it = datagen.flow(samples, batch_size=1)     
         images.append(img)
         labels.append(lab) 
-        for i in range(16):
+        for i in range(8):
             batch = it.next()
             image = batch[0].astype('uint8')
             img_array=img_to_array(image)
@@ -73,8 +98,51 @@ def data_augmentation(x, y):
     
     return(np.array(images), np.array(labels))
             
-        
+images = []
+labels = []
+lab = 0
+path = "/home/maelle/Documents/Stage_m2/data/DIC_cropped_augmnted/"    
+filenames = []
+for class_dir in ["AA/","NEBD/","Meta/"]:
+    img_names = os.listdir(path+class_dir)
+    datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
+    for img in img_names:
+        img_read = cv2.resize(cv2.imread(path+class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
+        img_read = import_data.rgb2gray(img_read, dim) 
+        samples = np.expand_dims(img_read, 0)            
+        it = datagen.flow(samples, batch_size=1)
+        images.append(img_read)
+        labels.append(lab) 
+        # for i in range(4): #rotation by 45°
+        #     filenames.append(img)
+        #     batch = it.next()
+        #     image = batch[0].astype('uint8')
+        #     img_array=img_to_array(image)
+        #     # if wgan:               
+        #     #     img_array=img_array/255.0 #for Wasserstein GAN, values must be in [0,1]  
+        #     # else:
+        #     #     img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
+        #     images.append(img_array)
+        #     labels.append(lab) 
+    lab += 1
+    
+x, y =data_augmentation(images, labels)
 
+        
+plt.imshow(img_array, cmap='gray')
+plt.imshow(img_resized, cmap='gray')
+plt.imshow(gray_reshaped, cmap='gray')
+plt.imshow(img_resized, cmap='gray')
+plt.imshow(img2, cmap='gray')
+plt.imshow(image, cmap='gray')
+plt.imshow(img, cmap='gray')
+
+
+plt.imshow(x_train[0], cmap='gray')
+plt.imshow(x_train[1], cmap='gray')
+plt.imshow(x_train[2], cmap='gray')
+plt.imshow(x_train[3], cmap='gray')
+plt.imshow(x_train[4], cmap='gray')
 
 def import_mito():    
     images = []
@@ -83,10 +151,9 @@ def import_mito():
     for class_dir in class_names:
         img_names = os.listdir(path+class_dir)
         for name in img_names: 
-            img_array = cv2.imread(path+class_dir+"/"+name,cv2.IMREAD_COLOR)
-            img_resized = cv2.resize((img_array),(dim,dim))
-            gray = np.dot(img_resized[...,:3], [0.299, 0.587, 0.144])
-            gray_reshaped = np.reshape(gray, (dim, dim, 1))
+            img_array = cv2.imread(path+class_dir+"/"+name, cv2.IMREAD_UNCHANGED)
+            img_resized = cv2.resize(img_array,(dim,dim))
+            gray_reshaped = np.reshape(img_resized, (dim, dim, 1))
             if wgan:               
                 img_array=gray_reshaped/255.0 #for Wasserstein GAN, values must be in [0,1]  
             else:
@@ -140,15 +207,14 @@ for i in range(2):
         
         x, y = import_mito()     
         
-        x_array = np.array(x)
+        x_array = np.array(x)  # x and y must be lists for kfold splitting but must be arrays for training
         y_array = to_categorical(y, nb_classes)     
         
         # prepare cross validation
         kfold = StratifiedKFold(n_splits=10) 
         kfold.get_n_splits(x,y)         
         
-        for train_index, test_index in kfold.split(x, y):
-            
+        for train_index, test_index in kfold.split(x, y):           
        
             
             x_train = x_array[train_index]
@@ -159,10 +225,7 @@ for i in range(2):
             
             print("Before data augmentation:")
             print(f"Train: {x_train.shape}")
-            print(f"Test: {x_test.shape}")   
-            
-            
-            
+            print(f"Test: {x_test.shape}")      
             
             x_train, y_train = data_augmentation(x_train, y_train)
             x_test, y_test = data_augmentation(x_test, y_test)

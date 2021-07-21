@@ -11,6 +11,8 @@ import numpy as np
 import cv2
 from keras.preprocessing.image import ImageDataGenerator, img_to_array
 from tensorflow.keras.utils import to_categorical
+from numpy import expand_dims
+
 
 def rgb2gray(rgb, dim, chan=None):
     """    
@@ -41,7 +43,7 @@ def rgb2gray(rgb, dim, chan=None):
     return gray_reshaped
 
 
-def resize(dataset, dim, wgan, chan=None):
+def resize(dataset, dim, chan=None):
     """    
 
     Parameters
@@ -64,33 +66,28 @@ def resize(dataset, dim, wgan, chan=None):
     for img in dataset:
         img_resized = cv2.resize((img),(dim,dim))
         img_resized = rgb2gray(img_resized, dim, chan)
-        if wgan:
-            dataset_resized.append(img_resized/255.0) #normalization [0,1]
-
-        else:
-            dataset_resized.append((img_resized-127.5)/127.5) #normalization [-1,1]
     return(np.array(dataset_resized))
 
-def cell_cognition(dim, wgan):
-    """   
+# def cell_cognition(dim):
+#     """   
 
-    Parameters
-    ----------
-    dim : int
-        dimension of one image
-    wgan : bool
-        False if data must be in [-1,1]
-        True if data must be in [0,1]
+#     Parameters
+#     ----------
+#     dim : int
+#         dimension of one image
+#     wgan : bool
+#         False if data must be in [-1,1]
+#         True if data must be in [0,1]
 
-    -------
-    Dataset splitted in train / test
+#     -------
+#     Dataset splitted in train / test
 
-    """
-    path = "/home/maelle/Documents/Stage_m2/data/dataset"
-    class_names = ['AA', 'BA','I','J']
-    nb_classes = len(class_names)
+#     """
+#     path = "/home/maelle/Documents/Stage_m2/data/dataset"
+#     class_names = ['AA', 'BA','I','J']
+#     nb_classes = len(class_names)
     
-    def create_dataset_cell_cognition(class_dir, label, wgan, dim):
+    def create_dataset_cell_cognition(class_dir, label, dim):
         """
         
     
@@ -117,10 +114,6 @@ def cell_cognition(dim, wgan):
         for img in img_names:
             img_read=cv2.resize(cv2.imread(class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
             img_array=img_to_array(img_read)
-            if wgan:               
-                img_array=img_array/255.0 #for Wasserstein GAN, values must be in [0,1]  
-            else:
-                img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
             images.append(img_array)
             labels.append(label)
             
@@ -143,15 +136,13 @@ def cell_cognition(dim, wgan):
     x = np.concatenate((x_train, x_test))
     y = np.concatenate((y_train, y_test))  
     
-    y = to_categorical(y, nb_classes) 
-
     img_names = tr_names.append(ts_names)
         
     return(x, y, img_names)
 
 
 
-def nagao(path, dim, wgan, chan=None):
+def nagao(path, dim, chan=None):
     """    
 
     Parameters
@@ -179,13 +170,13 @@ def nagao(path, dim, wgan, chan=None):
     x = np.concatenate((x_train, x_test))
     y = np.concatenate((y_train, y_test))  
     
-    x = resize(x, dim, wgan, chan)
+    x = resize(x, dim, chan)
     y = to_categorical(y, nb_classes) 
         
     return(x, y) 
 
 
-def dic(dim, wgan):
+def dic(dim):
     """
     
 
@@ -208,29 +199,17 @@ def dic(dim, wgan):
     filenames = []
     for class_dir in ["AA/","NEBD/","Meta/"]:
         img_names = os.listdir(path+class_dir)
-        datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
         for img in img_names:
             img_read = cv2.resize(cv2.imread(path+class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
-            img_read = rgb2gray(img_read, dim) 
-            samples = np.expand_dims(img_read, 0)            
-            it = datagen.flow(samples, batch_size=1)
-            for i in range(4): #rotation by 45°
-                filenames.append(img)
-                batch = it.next()
-                image = batch[0].astype('uint8')
-                img_array=img_to_array(image)
-                if wgan:               
-                    img_array=img_array/255.0 #for Wasserstein GAN, values must be in [0,1]  
-                else:
-                    img_array=(img_array-127.5)/127.5 #for classic GAN, must be in [-1,1]
-                images.append(img_array)
-                labels.append(lab) 
+            gray_reshaped = rgb2gray(img_read, dim)  
+            images.append(gray_reshaped)
+            labels.append(lab) 
+            filenames.append(img)
         lab += 1
-                
-    labels = to_categorical(labels, 3)    
-    return(np.array(images), np.array(labels), filenames)
+        
+    return(images, labels, filenames)
 
-def import_mito(dim, wgan):
+def import_mito(dim):
     """
     
 
@@ -251,19 +230,46 @@ def import_mito(dim, wgan):
     images = []
     labels = []    
     lab = 0
+    filenames = []
     for class_dir in class_names:
         img_names = os.listdir(path+class_dir)
         for name in img_names: 
+            filenames.append(name)
             img_array = cv2.imread(path+class_dir+"/"+name,cv2.IMREAD_COLOR)
             img_resized = cv2.resize((img_array),(dim,dim))
             gray = np.dot(img_resized[...,:3], [0.299, 0.587, 0.144])
-            gray_reshaped = np.reshape(gray, (dim, dim, 1))
-            if wgan:               
-                img_array=gray_reshaped/255.0 #for Wasserstein GAN, values must be in [0,1]  
-            else:
-                img_array=(gray_reshaped-127.5)/127.5 #for classic GAN, must be in [-1,1]                
-            images.append(img_array)
+            gray_reshaped = np.reshape(gray, (dim, dim, 1))            
+            images.append(gray_reshaped)
             labels.append(lab) 
         lab += 1     
         
-    return(images, labels)
+    return(images, labels, filenames)
+
+def data_augmentation(x, y, filenames):    
+    images = []
+    labels = []    
+    filenames2 = []
+    
+    datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
+    nb_images = len(x)
+    for i in range(nb_images):
+        lab = y[i]
+        img = x[i]
+        if len(filenames)>0:
+            file = filenames[i]
+        samples = expand_dims(img, 0)
+        it = datagen.flow(samples, batch_size=1)     
+        for i in range(4):
+            batch = it.next()
+            image = batch[0].astype('uint8')
+            img_array=img_to_array(image)
+            images.append(img_array)
+            labels.append(lab)      
+            if len(filenames)>0:
+                    filenames2.append(file)  
+    
+    return(np.array(images), np.array(labels), filenames)
+
+
+
+
