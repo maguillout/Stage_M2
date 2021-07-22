@@ -188,8 +188,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         print("Before data augmentation:")
         print(f"Train: {x_train.shape}")
         print(f"Test: {x_test.shape}")              
-        
-        
+                
         
         x_train, y_train = import_data.data_augmentation(x_train, y_train)
         x_test, y_test = import_data.data_augmentation(x_test, y_test)
@@ -199,9 +198,8 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         print(f"Test: {x_test.shape}")
         
         # Normalization:  for classic GAN, values must be in [-1,1]
-        x_train=(x_train-127.5)/127.5
-        x_test=(x_test-127.5)/127.5
-        
+        x_train = x_train/255
+        x_test = x_train/255
         
         # if img_names:
         #     filenames = np.array(img_names)[test_index]            
@@ -340,13 +338,13 @@ if __name__ == "__main__":
         
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
-        # dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
-        dataset_list =  ["HeLa_Hoechst-EB1"] 
+        dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
     
     else:        
         dataset_list = [data] 
         
         
+    
     # Model importation
     base_model=keras.models.load_model(model_path)
     base_model.trainable = False
@@ -356,7 +354,7 @@ if __name__ == "__main__":
     for dataset in dataset_list:
         if data == "Nagao":                
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=True)
+            x, y = import_data.nagao(path, dim)
             img_names = None
             if dataset == "NIH3T3_Cilia":
                 class_names = ["Cilia", "notCilia"]
@@ -365,11 +363,11 @@ if __name__ == "__main__":
             
         elif data == "CellCognition":
             class_names = ['AA', 'BA','I','J']
-            x, y, img_names  = import_data.cell_cognition(dim, wgan=True)
+            x, y, img_names  = import_data.cell_cognition(dim)
     
         elif data == "DIC":
             class_names = ["AA","NEBD","Meta"]
-            x, y, img_names  = import_data.dic(dim, wgan=True)
+            x, y, img_names  = import_data.dic(dim)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
@@ -378,6 +376,8 @@ if __name__ == "__main__":
             
         ############## Fitting and results ##############################################  
         nb_classes = len(class_names)
+    
+        print(len(x),len(y))
         
         if cross_valid:
             cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes, img_names)

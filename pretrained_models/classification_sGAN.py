@@ -21,7 +21,7 @@ import numpy as np
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import layers, activations
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 
 from sklearn.model_selection import train_test_split
 
@@ -153,14 +153,19 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
 
     """
     x_array = np.array(x)  # x and y must be lists for kfold splitting but must be arrays for training
-    y_array = to_categorical(y, nb_classes)    
-    
-    
     t0 = time.time() #starting timer  
     kf = 0   
     # prepare cross validation
-    kfold = StratifiedKFold(n_splits=5) 
-    kfold.get_n_splits(x,y)   
+    # kfold = StratifiedKFold(n_splits=5) 
+    # kfold.get_n_splits(x,y)   
+    kfold = KFold(n_splits=5, shuffle=True)
+    
+  
+    
+    x_array, y = import_data.data_augmentation(x_array, y)    
+    
+    y_array = to_categorical(y, nb_classes)    
+    
     
     #################### Cross Validation #######################################   
     # The dataset is split in k groups (k=5), each group will be used as a testing dataset.
@@ -168,7 +173,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     acc_kf = [] 
     epo_kf = []
     
-    for train_index, test_index in kfold.split(x, y):
+    for train_index, test_index in kfold.split(x_array):
         x_train = x_array[train_index]
         y_train = y_array[train_index]
         
@@ -186,32 +191,29 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         print(f"Train: {x_train.shape}")
         print(f"Test: {x_test.shape}")      
         
-        x_train, y_train = import_data.data_augmentation(x_train, y_train)
-        x_test, y_test = import_data.data_augmentation(x_test, y_test)   
+
         
         print("After data augmentation:")
         print(f"Train: {x_train.shape}")
         print(f"Test: {x_test.shape}")
         
-        # Normalization:  for classic GAN, values must be in [-1,1]
-        x_train=(x_train-127.5)/127.5
-        x_test=(x_test-127.5)/127.5
-        
-
-        
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
-            model = full_retraining(base_model, nb_classes)        
+            base_model.summary()
+            model = full_retraining(base_model, nb_classes)   
+            print("ici fr")
             save_path = f'{path_results}/{dataset}_full_retrain'
             
         elif mode == "TL":       
             title_name = f"Transfer Learning for prediction of classes {class_names} for {dataset} with sGAN - kfold {kf}"
-            model = transfer_learning(base_model, nb_classes)        
+            model = transfer_learning(base_model, nb_classes)  
+            print("ici tl")      
             save_path = f'{path_results}/{dataset}_TL'
             
         else:
             title_name = f"Fine Tuning for prediction of classes {class_names} for {dataset}  with sGAN - kfold {kf}"
             model = fine_tuning(base_model, nb_classes) 
+            print("ici ft")
             save_path = f'{path_results}/{dataset}_FT'
             
         print(title_name)    
@@ -287,7 +289,7 @@ if __name__ == "__main__":
     mode = "FT"
     cross_valid = False
     per_train_data = 0.8
-    data = "Nagao"  
+    data = "DIC"  
     model_path = "/home/maelle/Documents/Stage_m2/Models/c_model_5400.h5"
     random_weights = False
     chan = None
@@ -331,8 +333,7 @@ if __name__ == "__main__":
             chan = arg
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
-        # dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
-        dataset_list =  ["HeLa_Hoechst-EB1"] 
+        dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
     
     else:        
         dataset_list = [data]         

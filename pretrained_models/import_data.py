@@ -203,9 +203,12 @@ def dic(dim):
             img_read = cv2.resize(cv2.imread(path+class_dir+img,cv2.IMREAD_UNCHANGED),(dim,dim))
             gray_reshaped = rgb2gray(img_read, dim)  
             images.append(gray_reshaped)
+            gray_reshaped = gray_reshaped/255
             labels.append(lab) 
             filenames.append(img)
         lab += 1
+        
+
         
     return(images, labels, filenames)
 
@@ -264,7 +267,5 @@ def data_augmentation(x, y):
             labels.append(lab)      
     
     return(np.array(images), np.array(labels))
-
-
 
 

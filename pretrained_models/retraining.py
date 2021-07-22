@@ -25,6 +25,12 @@ def check_neural_network(model):
     for layer in model.layers:
         print(layer.name," ", layer.trainable)        
         
+
+# x_train.shape
+# y_train.shape
+# x_test.shape
+# y_test.shape
+        
         
         
 def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset):    
