@@ -301,7 +301,7 @@ if __name__ == "__main__":
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
-                                 "data=", "per=", "cross_valid","help","random_weights","chan"])
+                                 "data=", "per=", "cross_valid","help","random_weights","chan","nkf="])
 
     except getopt.GetoptError as err:
         print(err)
