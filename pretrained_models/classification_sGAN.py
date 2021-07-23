@@ -159,7 +159,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     kf = 0   
     
     # prepare cross validation
-    kfold = StratifiedKFold(n_splits=5, shuffle=True) 
+    kfold = StratifiedKFold(n_splits=nkf, shuffle=True) 
     kfold.get_n_splits(x,y)   
     
     #################### Cross Validation #######################################   
@@ -281,6 +281,8 @@ def usage():
     print("\t -m --mode : retraining mode: FT, TL, FR")
     print("\t -w --random_weights : initialize the model with random weights")
     print("\t --chan: selected color red -> 0 green -> 1 blue -> 2, by default, the thre channels are merged ")
+    print("\t --nkf: number of folds for cross validation (default: 5)")
+
     
 if __name__ == "__main__":
     # default parameters
@@ -294,6 +296,7 @@ if __name__ == "__main__":
     model_path = "/home/maelle/Documents/Stage_m2/Models/c_model_5400.h5"
     random_weights = False
     chan = None
+    nkf = 5
     
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
