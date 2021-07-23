@@ -21,7 +21,11 @@ python sGAN.py -r directory/to/store/results
 ## Datasets
 The `-d` option (or `--data`) allows to change the dataset (default is Nagao)
 - Cell Cognition dataset: `-d CellCognition`
-- Nagao datasets `-d Nagao`
+- `-d HeLa_Hoechst-EB1`
+- `-d RPE1_Hoechst`
+- `-d HeLa_Hoechst-GM130`
+- `-d NIH3T3_Cilia`
+- All datasets from Nagao study: `-d Nagao`
 - DIC dataset (Differential interference contrast microscopy) `-d DIC`
 
 ## Retraining mode
@@ -35,5 +39,7 @@ By default, the model is fine tuned before retraining, but it is also possible t
 ## Other options:
 - batch size (default is 8): `-b 16` or `--batch_size 16`
 - cross validation (defaut is false): `-c` or `--cross_valid`
+- number of folds for cross validation (default is 5): `--nk 10`
 - proportion data which be used for training (defaut is 0.8): `-p 0.6` or `--per 0.6`
 - initialize the model with random weights (defaut is false): `-w` or `--random_weights`
+- use only one channel (by default, the three channels are merged): red -> `--chan 0` green -> `--chan 1` blue -> `--chan 2`
