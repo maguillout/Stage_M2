@@ -139,7 +139,7 @@ def full_retraining(base_model, nb_classes):
 
 ######################### Retraining the model ###############################
 
-def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes, img_names):
+def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, nb_classes, img_names):
     """
     Split the dataset in k groups to vary the testing dataset at each fold
     Draw plots
@@ -154,7 +154,6 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     class_names : list of different labels
     batch_size : size of one batch
     path_results : directory to store plots
-    base_model : pretrained model
     nb_classes : number of clases
 
     Returns
@@ -168,8 +167,9 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
     
     t0 = time.time() #starting timer  
     kf = 0   
+    
     # prepare cross validation
-    kfold = StratifiedKFold(n_splits=5) 
+    kfold = StratifiedKFold(n_splits=nkf, shuffle=True) 
     kfold.get_n_splits(x,y)   
     
     #################### Cross Validation #######################################   
@@ -187,9 +187,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         
         print("Before data augmentation:")
         print(f"Train: {x_train.shape}")
-        print(f"Test: {x_test.shape}")              
-        
-        
+        print(f"Test: {x_test.shape}")         
         
         x_train, y_train = import_data.data_augmentation(x_train, y_train)
         x_test, y_test = import_data.data_augmentation(x_test, y_test)
@@ -199,15 +197,19 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         print(f"Test: {x_test.shape}")
         
         # Normalization:  for classic GAN, values must be in [-1,1]
-        x_train=(x_train-127.5)/127.5
-        x_test=(x_test-127.5)/127.5
-        
+        x_train = x_train/255
+        x_test = x_test/255        
         
         # if img_names:
         #     filenames = np.array(img_names)[test_index]            
         
         # else: 
         #     filenames = None
+        
+        # Model importation
+        base_model=keras.models.load_model(model_path)
+        base_model.trainable = False
+        base_model.summary()   
             
         if mode == "FR":
             title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with sGAN kfold - {kf}"
@@ -280,7 +282,7 @@ def usage():
     print(f"\nUSAGE\npython {sys.argv[0]}")
     print("Use a pretrained wGAN  model on a new dataset")
     print("\nOPTIONS")
-    print("\t --data : dataset: Nagao or DIC or CellCognition")
+    print("\t --data : dataset: HeLa_Hoechst-EB1, RPE1_Hoechst, HeLa_Hoechst-GM130, NIH3T3_Cilia, Nagao (for classification on the 4 subsets), DIC, CellCognition, Mito")
     print("\t -r --path_results : path directory where plots are registred")    
     print("\t -d --dim : image dimension (in pixels) is d*d")
     print("\t -b --batch_size : size of each batch")
@@ -289,6 +291,7 @@ def usage():
     print("\t -m --mode : retraining mode: FT, TL, FR")
     print("\t -w --random_weights : initialize the model with random weights")
     print("\t --chan: selected color red -> 0 green -> 1 blue -> 2, by default, the thre channels are merged ")
+    print("\t --nkf: number of folds for cross validation (default: 5)")
           
     
 if __name__ == "__main__":
@@ -303,12 +306,12 @@ if __name__ == "__main__":
     model_path = "/home/maelle/Documents/Stage_m2/Models/d_model_Trained_All_Labled_Images.h5"
     random_weights = False
     chan = None
-
+    nkf = 5
     
     try:
         opts, _ = getopt.getopt(sys.argv[1:],"m:r:d:b:p:chw",
                                 ["mode=", "path_results=", "dim=", "batch_size=",
-                                 "data=", "per=", "cross_valid","help","random_weights","chan"])
+                                 "data=", "per=", "cross_valid","help","random_weights","chan","nkf="])
 
     except getopt.GetoptError as err:
         print(err)
@@ -337,11 +340,12 @@ if __name__ == "__main__":
             random_weights = True
         elif option in ("--chan"):
             chan = arg
+        elif option in ("--,nkf"):
+            nkf = arg
         
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
-        # dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
-        dataset_list =  ["HeLa_Hoechst-EB1"] 
+        dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
     
     else:        
         dataset_list = [data] 
@@ -353,23 +357,26 @@ if __name__ == "__main__":
     base_model.summary()   
         
     
-    for dataset in dataset_list:
-        if data == "Nagao":                
+    for dataset in dataset_list:        
+        img_names = None
+        
+        if dataset == "NIH3T3_Cilia":
             path = "/home/maelle/Documents/Stage_m2/data/"+dataset
-            x, y = import_data.nagao(path, dim, wgan=True)
-            img_names = None
-            if dataset == "NIH3T3_Cilia":
-                class_names = ["Cilia", "notCilia"]
-            else:            
-                class_names = ["G2", "notG2"]
+            x, y = import_data.nagao(path, dim)
+            class_names = ["Cilia", "notCilia"]
+            
+        elif dataset in ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130"]:      
+            path = "/home/maelle/Documents/Stage_m2/data/"+dataset
+            x, y = import_data.nagao(path, dim)
+            class_names = ["G2", "notG2"]
             
         elif data == "CellCognition":
             class_names = ['AA', 'BA','I','J']
-            x, y, img_names  = import_data.cell_cognition(dim, wgan=True)
+            x, y, img_names  = import_data.cell_cognition(dim)
     
         elif data == "DIC":
             class_names = ["AA","NEBD","Meta"]
-            x, y, img_names  = import_data.dic(dim, wgan=True)
+            x, y, img_names  = import_data.dic(dim)
             
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
@@ -380,12 +387,17 @@ if __name__ == "__main__":
         nb_classes = len(class_names)
         
         if cross_valid:
-            cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, base_model, nb_classes, img_names)
+            cross_validation(x, y, mode, dataset, class_names, batch_size, path_results, nb_classes, img_names)
             
         else:
             t0 = time.time() #starting timer    
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 1-per_train_data)
             train_len = len(y_train)    
+            
+            # Model importation
+            base_model=keras.models.load_model(model_path)
+            base_model.trainable = False
+            base_model.summary()   
 
             if mode == "FR":
                 title_name = f"Full retraining for prediction of classes {class_names} for {dataset} with train_len size {train_len}"

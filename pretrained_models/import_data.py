@@ -119,28 +119,6 @@ def resize(dataset, dim, chan=None):
             
         return(images, labels, img_names)
 
-    
-
-    for i in range(nb_classes):
-        g = class_names[i]
-        train_dir = path + "/train/"+g+"/"
-        test_dir = path + "/test/"+g+"/"
-        data_tr, labels_tr, tr_names = create_dataset_cell_cognition(train_dir, i, wgan, dim)
-        data_ts, labels_ts, ts_names = create_dataset_cell_cognition(test_dir, i, wgan, dim)        
-        
-    x_train = np.array(data_tr)    
-    y_train = np.array(labels_tr)    
-    x_test = np.array(data_ts)    
-    y_test = np.array(labels_ts)
-
-    x = np.concatenate((x_train, x_test))
-    y = np.concatenate((y_train, y_test))  
-    
-    img_names = tr_names.append(ts_names)
-        
-    return(x, y, img_names)
-
-
 
 def nagao(path, dim, chan=None):
     """    
@@ -209,7 +187,7 @@ def dic(dim):
         
     return(images, labels, filenames)
 
-def import_mito(dim):
+def mito(dim):
     """
     
 
@@ -226,7 +204,7 @@ def import_mito(dim):
 
     """    
     class_names = ["control", "treated"]
-    path = "/home/maelle/Documents/Stage_m2/data/data_mito/"   
+    path = "/home/maelle/Documents/Stage_m2/data/mito_rotations"   
     images = []
     labels = []    
     lab = 0
@@ -245,7 +223,21 @@ def import_mito(dim):
         
     return(images, labels, filenames)
 
-def data_augmentation(x, y):    
+
+def data_augmentation(x, y):  
+    """    
+    Horizontal and vertical flips
+    
+    Parameters
+    ----------
+    x : list of images
+    y : list of labels
+    
+    Returns
+    -------
+    Augmented datasets and labels
+
+    """
     images = []
     labels = []    
     
@@ -256,7 +248,7 @@ def data_augmentation(x, y):
         img = x[i]
         samples = expand_dims(img, 0)
         it = datagen.flow(samples, batch_size=1)     
-        for i in range(8):
+        for i in range(4):
             batch = it.next()
             image = batch[0].astype('uint8')
             img_array=img_to_array(image)
