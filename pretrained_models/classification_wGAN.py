@@ -182,23 +182,23 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         x_train = x_array[train_index]
         y_train = y_array[train_index]
         
-        x_test = x_array[test_index]
-        y_test = y_array[test_index]            
+        x_valid = x_array[test_index]
+        y_valid = y_array[test_index]            
         
         print("Before data augmentation:")
         print(f"Train: {x_train.shape}")
-        print(f"Test: {x_test.shape}")         
+        print(f"Test: {x_valid.shape}")         
         
         x_train, y_train = import_data.data_augmentation(x_train, y_train)
-        x_test, y_test = import_data.data_augmentation(x_test, y_test)
+        x_valid, y_valid = import_data.data_augmentation(x_valid, y_valid)
         
         print("After data augmentation:")
         print(f"Train: {x_train.shape}")
-        print(f"Test: {x_test.shape}")
+        print(f"Test: {x_valid.shape}")
         
         # Normalization:  for classic GAN, values must be in [-1,1]
         x_train = x_train/255
-        x_test = x_test/255        
+        x_valid = x_valid/255        
         
         # if img_names:
         #     filenames = np.array(img_names)[test_index]            
@@ -231,7 +231,7 @@ def cross_validation(x, y, mode, dataset, class_names, batch_size, path_results,
         if random_weights:
             retraining.shuffle_weights(model)       
         
-        acc, epo, tab = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, kf, class_names, dataset)
+        acc, epo, tab = retraining.fitting(model, x_train, y_train, x_valid, y_valid, batch_size, save_path, title_name, kf, class_names, dataset)
         
         acc_kf.append(acc)
         epo_kf.append(epo)
@@ -378,6 +378,11 @@ if __name__ == "__main__":
             class_names = ["AA","NEBD","Meta"]
             x, y, img_names  = import_data.dic(dim)
             
+        elif data == "Mito":
+            class_names = ["control", "treated"]
+            x, y, img_names  = import_data.mito(dim)
+
+            
         else:
             print("Enter a right dataset name (Nagao, DIC or CellCognition)")
             usage()
@@ -391,7 +396,7 @@ if __name__ == "__main__":
             
         else:
             t0 = time.time() #starting timer    
-            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 1-per_train_data)
+            x_train, x_valid, y_train, y_valid = train_valid_split(x, y, test_size = 1-per_train_data)
             train_len = len(y_train)    
             
             # Model importation
@@ -435,7 +440,7 @@ if __name__ == "__main__":
             if random_weights:
                 retraining.shuffle_weights(model)                
 
-            acc, epo, _ = retraining.fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, title_name, '_', class_names, dataset)
+            acc, epo, _ = retraining.fitting(model, x_train, y_train, x_valid, y_valid, batch_size, save_path, title_name, '_', class_names, dataset)
 
             f.write(f"{train_len}\t")
             f.write(f"{acc}\t")

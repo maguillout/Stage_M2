@@ -13,7 +13,6 @@ from keras.preprocessing.image import ImageDataGenerator, img_to_array
 from tensorflow.keras.utils import to_categorical
 from numpy import expand_dims
 
-
 def rgb2gray(rgb, dim, chan=None):
     """    
     Convert an colored image (3 channels) to a grayscale image
@@ -188,8 +187,7 @@ def dic(dim):
     return(images, labels, filenames)
 
 def mito(dim):
-    """
-    
+    """   
 
     Parameters
     ----------
@@ -204,7 +202,7 @@ def mito(dim):
 
     """    
     class_names = ["control", "treated"]
-    path = "/home/maelle/Documents/Stage_m2/data/mito_rotations"   
+    path = "/home/maelle/Documents/Stage_m2/data/data_mito/"   
     images = []
     labels = []    
     lab = 0
@@ -224,6 +222,34 @@ def mito(dim):
     return(images, labels, filenames)
 
 
+def mito_test(dim):
+    """
+    Test pretrained model on Mito datasets on 2 images of mito
+    """    
+    images = []
+    labels = []    
+    
+    # Control mitochondria
+    img_array = cv2.imread("/home/maelle/Documents/Stage_m2/data/test_mito/control.tif",cv2.IMREAD_COLOR)
+    img_resized = cv2.resize((img_array),(dim,dim))
+    gray = np.dot(img_resized[...,:3], [0.299, 0.587, 0.144])
+    gray_reshaped = np.reshape(gray, (dim, dim, 1))       
+    images.append(gray_reshaped)
+    labels.append(0)
+    
+    # Treated mitochondria
+    img_array = cv2.imread("/home/maelle/Documents/Stage_m2/data/test_mito/treated.tif",cv2.IMREAD_COLOR)
+    img_resized = cv2.resize((img_array),(dim,dim))
+    gray = np.dot(img_resized[...,:3], [0.299, 0.587, 0.144])
+    gray_reshaped = np.reshape(gray, (dim, dim, 1))       
+    images.append(gray_reshaped)
+    labels.append(1)
+    
+    images, labels = data_augmentation(images, labels)
+    
+    return(images, labels)
+
+
 def data_augmentation(x, y):  
     """    
     Horizontal and vertical flips
@@ -241,14 +267,14 @@ def data_augmentation(x, y):
     images = []
     labels = []    
     
-    datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True)
+    datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, rotation_range=45)
     nb_images = len(x)
     for i in range(nb_images):
         lab = y[i]
         img = x[i]
         samples = expand_dims(img, 0)
         it = datagen.flow(samples, batch_size=1)     
-        for i in range(4):
+        for i in range(12):
             batch = it.next()
             image = batch[0].astype('uint8')
             img_array=img_to_array(image)

@@ -19,6 +19,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from keras.callbacks import EarlyStopping
 
+import import_data
+
 
 def check_neural_network(model):
     print(model.summary())
@@ -63,7 +65,7 @@ def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, titl
     acc = accuracy_score(y_test.argmax(axis=1), preds.argmax(axis=1))
     epo = len(H.history['accuracy'])       
     
-    print('Accuracy score on test dataset',acc)
+    print('Accuracy score on validation dataset',acc)
     print('classification_report',classification_report(y_test.argmax(axis=1), preds.argmax(axis=1)))
     
     figures.plot_confusion_matrix(y_test.argmax(axis=1), preds.argmax(axis=1), classes=np.array(class_names), title='Confusion Matrix')
@@ -71,7 +73,19 @@ def fitting(model, x_train, y_train, x_test, y_test, batch_size, save_path, titl
     plt.savefig(f'{save_path}_confusion_matrix_{dataset}_{batch_size}_kf_{kf}.png')
     plt.clf()     
     
+    if dataset == "Mito":
+        test_img, test_labels = import_data.mito_test(72)
+        preds = model.predict(test_img)
+        
+        print('Accuracy score on test dataset',accuracy_score(test_labels, preds.argmax(axis=1)))        
+        print('classification_report',classification_report(test_labels, preds.argmax(axis=1)))        
+        figures.plot_confusion_matrix(np.array(test_labels), preds.argmax(axis=1), classes=np.array(class_names), title='Confusion Matrix') 
+        plt.title(f'confusion matrix for classification of {dataset} testing dataset (2 images augmented by 8)')
+        plt.savefig(f'{save_path}_confusion_matrix_test_{dataset}_{batch_size}_kf_{kf}.png')
+        plt.clf()   
+    
     return(acc,epo, tab)
+
 
 def shuffle_weights(model, weights=None):
     """
