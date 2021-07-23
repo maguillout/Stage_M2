@@ -330,6 +330,9 @@ if __name__ == "__main__":
             random_weights = True  
         elif option in ("--chan"):
             chan = arg
+        elif option in ("--,nkf"):
+            nkf = arg
+        
                 
     if data == "Nagao": #for nagao images, there are 4 different datasets
         dataset_list =  ["HeLa_Hoechst-EB1", "RPE1_Hoechst", "HeLa_Hoechst-GM130","NIH3T3_Cilia"] 
